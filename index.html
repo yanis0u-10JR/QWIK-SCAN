@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="QWIK Scan">
+<meta name="theme-color" content="#15171A"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png">
+<title>QWIKSELLER Scan</title>
+<style>
+:root{--bg:#15171A;--bg2:#1E2125;--bg3:#2A2E34;--gold:#D4A72C;--ink:#F4F2EC;--muted:#8A8F98}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000;color:var(--ink);font:15px/1.4 -apple-system,Inter,system-ui,sans-serif;overflow:hidden}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+.top{padding:calc(env(safe-area-inset-top) + 8px) 16px 8px;background:var(--bg);display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:800;font-size:18px;letter-spacing:-.3px}.logo b{color:var(--gold)}
+.top span{font-size:13px;color:var(--muted)}
+.cam{flex:1;position:relative;min-height:0;background:#000}
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.frame{position:absolute;inset:12% 8%;border:2px solid #ffffff55;border-radius:18px;pointer-events:none}
+.msg{position:absolute;left:12px;right:12px;bottom:12px;text-align:center;font-size:14px;text-shadow:0 1px 4px #000}
+.flash{animation:fl .25s}@keyframes fl{from{opacity:.15}to{opacity:1}}
+.strip{background:var(--bg);display:flex;gap:6px;padding:8px 12px;overflow-x:auto;min-height:72px;align-items:center}
+.strip .art{flex:none;display:flex;gap:4px;align-items:center;padding:4px 6px;border-radius:10px;background:var(--bg2);border:1px solid var(--bg3)}
+.strip .art.cur{border-color:var(--gold)}.strip .art b{font-size:12px;color:var(--gold);margin-right:2px}
+.strip img{width:46px;height:46px;object-fit:cover;border-radius:6px}
+.strip .empty{color:var(--muted);font-size:13px}
+.bar{background:var(--bg);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 18px calc(env(safe-area-inset-bottom) + 14px)}
+.shut{width:76px;height:76px;border-radius:50%;border:5px solid var(--gold);background:#fff}.shut:active{transform:scale(.9)}
+button{font:inherit;cursor:pointer}
+.side{background:var(--bg2);border:1px solid var(--bg3);color:var(--ink);border-radius:12px;padding:12px 10px;font-size:14px;min-height:44px}
+.side.gold{background:var(--gold);color:#15171A;border:0;font-weight:700}
+.l{justify-self:start}.r{justify-self:end}
+#sheet{position:fixed;inset:0;background:#000c;display:none;align-items:flex-end}
+#sheet .in{background:var(--bg);width:100%;border-radius:18px 18px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom) + 18px)}
+#sheet h2{margin:0 0 4px;font-size:20px}#sheet p{color:var(--muted);margin:0 0 12px;font-size:14px}
+#sheet .side{width:100%;margin-top:8px}
+.start{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;background:var(--bg)}
+.start h1{font-size:30px;margin:0 0 8px;line-height:1.1}.start h1 b{color:var(--gold)}.start p{color:#C3C7CE;margin:0 0 18px}
+.start .side{width:100%;max-width:320px}
+.zoom{position:absolute;left:0;right:0;bottom:44px;display:flex;justify-content:center;gap:8px;z-index:2}
+.zoom button{min-width:44px;height:44px;border-radius:22px;border:0;background:#000a;color:#fff;font-weight:700;font-size:13px;padding:0 10px}
+.zoom button.on{background:var(--gold);color:#15171A}
+.zl{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#000a;border-radius:12px;padding:3px 10px;font-size:13px;font-weight:700;z-index:2}
+.strip .t{position:relative;flex:none}
+.strip .t i{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;background:#E5674E;color:#fff;font-style:normal;font-weight:700;font-size:14px;line-height:24px;text-align:center}
+.toast{position:absolute;left:50%;top:44px;transform:translateX(-50%);background:#15171Aee;border:1px solid var(--bg3);border-radius:14px;padding:6px 6px 6px 14px;display:none;align-items:center;gap:10px;z-index:3;font-size:14px;white-space:nowrap}
+.toast button{background:#E5674E;color:#fff;border:0;border-radius:10px;padding:10px 12px;font-weight:700}
+#view{position:fixed;inset:0;background:#000;display:none;flex-direction:column;z-index:5}
+#view img{flex:1;min-height:0;width:100%;object-fit:contain}
+#view .vb{display:flex;gap:10px;padding:12px 16px calc(env(safe-area-inset-bottom) + 14px);background:var(--bg)}
+#view .vb button{flex:1}
+.side.red{background:#E5674E;border:0;color:#fff;font-weight:700}
+</style></head><body>
+<div id="app">
+<div class="top"><div class="logo">QWIK<b>SELLER</b> Scan</div><span id="count">0 article</span></div>
+<div class="cam" id="cam"><video id="vid" playsinline muted autoplay></video><div class="frame"></div><div class="zl" id="zl">1×</div><div class="zoom" id="zoom"></div><div class="toast" id="toast"><span id="tmsg"></span><button id="tdel">Supprimer</button></div><div class="msg" id="msg">Fais le tour de l'article : face, dos, détails, défauts, étiquette.</div>
+ <div class="start" id="start"><div><h1>Scanne. <b>Vends.</b></h1><p>Les photos restent dans l'appli : rien n'est enregistré dans ta galerie.</p><button class="side gold" id="go">Ouvrir la caméra</button><p style="margin-top:14px;font-size:12px">Astuce : Partager › « Sur l'écran d'accueil » pour l'avoir comme une appli.</p></div></div></div>
+<div class="strip" id="strip"><span class="empty">Tes photos apparaîtront ici.</span></div>
+<div class="bar"><button class="side l" id="next">Article suivant</button><button class="shut" id="shut" aria-label="Prendre la photo"></button><button class="side gold r" id="send">Envoyer</button></div>
+</div>
+<div id="view"><img id="vimg" alt=""><div class="vb"><button class="side red" id="vdel">Supprimer</button><button class="side gold" id="vkeep">Garder</button></div></div>
+<div id="sheet"><div class="in"><h2>Envoyer au Mac</h2><p>Choisis AirDrop puis ton Mac : les photos arrivent dans Téléchargements. Dépose-les ensuite dans le créateur QWIKSELLER. Rien ne reste sur l'iPhone.</p>
+<div id="arts"></div><button class="side gold" id="all">Tout envoyer</button><button class="side" id="clear">Tout effacer</button><button class="side" id="close">Retour</button></div></div>
+<input type="file" id="pick" accept="image/*" capture="environment" hidden>
+<script>
+{
+const $=s=>document.querySelector(s);let stream=null,arts=[[]],cur=0,lenses={},lens='wide',hw=null,zoom=1,digital=1,tt=null,viewing=null;
+const track=()=>stream&&stream.getVideoTracks()[0];
+async function open(c){if(stream)stream.getTracks().forEach(t=>t.stop());stream=await navigator.mediaDevices.getUserMedia({video:c,audio:false});$('#vid').srcObject=stream;
+ const t=track(),cap=t.getCapabilities?t.getCapabilities():{};hw=cap.zoom&&cap.zoom.max>1?{min:cap.zoom.min||1,max:cap.zoom.max}:null}
+const base={width:{ideal:4032},height:{ideal:3024}};
+async function start(){try{await open({facingMode:{ideal:'environment'},...base});$('#start').style.display='none';
+  const ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='videoinput');
+  for(const d of ds){const l=(d.label||'').toLowerCase();if(/ultra/.test(l))lenses.ultra=d.deviceId;else if(/t[ée]l[ée]|tele/.test(l))lenses.tele=d.deviceId;else if(/arri|back/.test(l)&&!/double|dual|triple/.test(l)&&!lenses.wide)lenses.wide=d.deviceId}
+  setZoom(1)}catch(e){$('#msg').textContent='Caméra en direct indisponible : le bouton ouvre l\'appareil photo.';$('#start').style.display='none'}}
+$('#go').onclick=start;
+function zbtns(){const b=[];if(lenses.ultra&&!hw)b.push(['ultra','0,5×']);b.push(['1','1×'],['2','2×']);if(lenses.tele&&!hw)b.push(['tele','Télé']);else b.push(['5','5×']);
+ $('#zoom').innerHTML=b.map(([k,l])=>`<button data-z="${k}" class="${(k==='ultra'&&lens==='ultra')||(k==='tele'&&lens==='tele')||(lens==='wide'&&+k===Math.round(zoom))||(lens==='tele'&&false)?'on':''}">${l}</button>`).join('');
+ $('#zl').textContent=(lens==='tele'?'Télé ':lens==='ultra'?'Ultra grand-angle ':'')+(Math.round(zoom*10)/10+'×').replace('.',',')+(hw?' optique/num.':digital>1?' numérique':'')}
+let pend=null;function setZoom(z){const max=hw?Math.min(hw.max,15):6;zoom=Math.max(hw?hw.min:1,Math.min(max,z));
+ if(hw){digital=1;$('#vid').style.transform='';if(!pend)pend=requestAnimationFrame(()=>{pend=null;track().applyConstraints({advanced:[{zoom}]}).catch(()=>{})})}
+ else{digital=zoom;$('#vid').style.transform=zoom>1?`scale(${zoom})`:''}zbtns()}
+async function useLens(l){if(!lenses[l]&&l!=='wide')return;try{await open(l==='wide'&&!lenses.wide?{facingMode:{ideal:'environment'},...base}:{deviceId:{exact:lenses[l]},...base});lens=l;setZoom(1)}catch(e){}}
+$('#zoom').onclick=e=>{const b=e.target.closest('[data-z]');if(!b||!stream)return;const z=b.dataset.z;
+ if(z==='ultra'||z==='tele'){useLens(z);return}if(lens!=='wide'){useLens('wide').then(()=>setZoom(+z))}else setZoom(+z)};
+let d0=0,z0=1;const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+$('#cam').addEventListener('touchstart',e=>{if(e.touches.length===2){d0=dist(e.touches);z0=zoom}},{passive:true});
+$('#cam').addEventListener('touchmove',e=>{if(e.touches.length===2&&d0){e.preventDefault();setZoom(z0*dist(e.touches)/d0)}},{passive:false});
+$('#cam').addEventListener('touchend',()=>{d0=0});
+async function grab(){const v=$('#vid');if(!stream){$('#pick').click();return}
+ const vw=v.videoWidth,vh=v.videoHeight,sw=Math.round(vw/digital),sh=Math.round(vh/digital);
+ const c=document.createElement('canvas');c.width=sw;c.height=sh;c.getContext('2d').drawImage(v,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,sw,sh);
+ const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.92));addShot(blob);
+ v.classList.remove('flash');void v.offsetWidth;v.classList.add('flash');if(navigator.vibrate)navigator.vibrate(30)}
+function addShot(blob){arts[cur].push(new File([blob],'photo.jpg',{type:'image/jpeg'}));draw();
+ $('#tmsg').textContent='Photo '+arts[cur].length+' ajoutée';$('#toast').style.display='flex';clearTimeout(tt);tt=setTimeout(()=>$('#toast').style.display='none',3500)}
+$('#tdel').onclick=()=>{arts[cur].pop();$('#toast').style.display='none';draw()};
+$('#pick').onchange=e=>{[...e.target.files].forEach(addShot);e.target.value=''};
+$('#shut').onclick=grab;
+$('#next').onclick=()=>{if(!arts[cur].length)return;arts.push([]);cur=arts.length-1;draw();$('#msg').textContent='Article '+(cur+1)+' : fais le tour du nouvel article.'};
+function draw(){const all=arts.flat().length,n=arts.filter(a=>a.length).length;$('#count').textContent=n+' article'+(n>1?'s':'')+' · '+all+' photo'+(all>1?'s':'');
+ $('#strip').innerHTML=all?arts.map((a,i)=>a.length||i===cur?`<div class="art ${i===cur?'cur':''}"><b>${i+1}</b>${a.map((f,j)=>`<span class="t"><img src="${URL.createObjectURL(f)}" data-a="${i}" data-p="${j}"><i data-a="${i}" data-p="${j}" data-x="1">×</i></span>`).join('')}</div>`:'').join(''):'<span class="empty">Tes photos apparaîtront ici. Touche une photo pour la vérifier.</span>';
+ $('#strip').scrollLeft=1e6}
+$('#strip').onclick=e=>{const el=e.target.closest('[data-a]');if(!el)return;const a=+el.dataset.a,p=+el.dataset.p;
+ if(el.dataset.x){arts[a].splice(p,1);draw();return}viewing=[a,p];$('#vimg').src=URL.createObjectURL(arts[a][p]);$('#view').style.display='flex'};
+$('#vdel').onclick=()=>{if(viewing){arts[viewing[0]].splice(viewing[1],1);draw()}$('#view').style.display='none';viewing=null};
+$('#vkeep').onclick=()=>{$('#view').style.display='none';viewing=null};
+const named=()=>arts.map((a,i)=>a.map((f,j)=>new File([f],`article${i+1}-photo${j+1}.jpg`,{type:'image/jpeg'})));
+async function share(files){if(!files.length)return;try{if(navigator.canShare&&navigator.canShare({files})){await navigator.share({files,title:'QWIKSELLER'})}else throw 0}catch(e){if(e&&e.name==='AbortError')return;alert('Partage indisponible sur ce navigateur. Ouvre la page dans Safari.')}}
+$('#send').onclick=()=>{if(!arts.flat().length)return;$('#arts').innerHTML=arts.map((a,i)=>a.length?`<button class="side" data-i="${i}">Envoyer l'article ${i+1} (${a.length} photo${a.length>1?'s':''})</button>`:'').join('');$('#sheet').style.display='flex'};
+$('#arts').onclick=e=>{const b=e.target.closest('[data-i]');if(b)share(named()[+b.dataset.i])};
+$('#all').onclick=()=>share(named().flat());
+$('#clear').onclick=()=>{arts=[[]];cur=0;draw();$('#sheet').style.display='none'};
+$('#close').onclick=()=>$('#sheet').style.display='none';
+}
+</script></body></html>
