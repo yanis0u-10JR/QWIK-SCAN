@@ -1,0 +1,41 @@
+{
+ "maj": "2026-06-15",
+ "source": "La Poste (1er janvier 2026), Mondial Relay (15 juin 2026)",
+ "tranches": [
+  {
+   "id": "lettre",
+   "max": 0.1,
+   "nom": "Lettre suivie",
+   "transporteur": "lettre",
+   "prix": 3.6
+  },
+  {
+   "id": "r500",
+   "max": 0.5,
+   "nom": "Mondial Relay",
+   "transporteur": "relais",
+   "prix": 4.15
+  },
+  {
+   "id": "r1",
+   "max": 1,
+   "nom": "Mondial Relay",
+   "transporteur": "relais",
+   "prix": 5.99
+  },
+  {
+   "id": "r3",
+   "max": 3,
+   "nom": "Mondial Relay",
+   "transporteur": "relais",
+   "prix": 7.99
+  },
+  {
+   "id": "r10",
+   "max": 10,
+   "nom": "Mondial Relay",
+   "transporteur": "relais",
+   "prix": 15.99
+  }
+ ]
+}
