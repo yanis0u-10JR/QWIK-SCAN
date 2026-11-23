@@ -86,14 +86,16 @@ $('#cam').addEventListener('touchstart',e=>{if(e.touches.length===2){d0=dist(e.t
 $('#cam').addEventListener('touchmove',e=>{if(e.touches.length===2&&d0){e.preventDefault();setZoom(z0*dist(e.touches)/d0)}},{passive:false});
 $('#cam').addEventListener('touchend',()=>{d0=0});
 async function grab(){const v=$('#vid');if(!stream){$('#pick').click();return}
- const vw=v.videoWidth,vh=v.videoHeight,sw=Math.round(vw/digital),sh=Math.round(vh/digital);
- const c=document.createElement('canvas');c.width=sw;c.height=sh;c.getContext('2d').drawImage(v,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,sw,sh);
+ const vw=v.videoWidth,vh=v.videoHeight,sw=Math.round(vw/digital),sh=Math.round(vh/digital),k=Math.min(1,3000/Math.max(sw,sh));
+ const c=document.createElement('canvas');c.width=Math.round(sw*k);c.height=Math.round(sh*k);c.getContext('2d').drawImage(v,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,c.width,c.height);
  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.92));addShot(blob);
  v.classList.remove('flash');void v.offsetWidth;v.classList.add('flash');if(navigator.vibrate)navigator.vibrate(30)}
 function addShot(blob){arts[cur].push(new File([blob],'photo.jpg',{type:'image/jpeg'}));draw();
  $('#tmsg').textContent='Photo '+arts[cur].length+' ajoutée';$('#toast').style.display='flex';clearTimeout(tt);tt=setTimeout(()=>$('#toast').style.display='none',3500)}
 $('#tdel').onclick=()=>{arts[cur].pop();$('#toast').style.display='none';draw()};
-$('#pick').onchange=e=>{[...e.target.files].forEach(addShot);e.target.value=''};
+// photos de la galerie (souvent HEIC) : converties ici en JPEG de 3000 px max, prêtes pour QWIKSELLER sans conversion lente
+async function versJpeg(f){try{const im=await createImageBitmap(f),k=Math.min(1,3000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);return await new Promise(r=>c.toBlob(r,'image/jpeg',.92))}catch(e){return f}}
+$('#pick').onchange=async e=>{const l=[...e.target.files];e.target.value='';for(const f of l)addShot(await versJpeg(f))};
 $('#shut').onclick=grab;
 $('#next').onclick=()=>{if(!arts[cur].length)return;arts.push([]);cur=arts.length-1;draw();$('#msg').textContent='Article '+(cur+1)+' : fais le tour du nouvel article.'};
 function draw(){const all=arts.flat().length,n=arts.filter(a=>a.length).length;$('#count').textContent=n+' article'+(n>1?'s':'')+' · '+all+' photo'+(all>1?'s':'');
